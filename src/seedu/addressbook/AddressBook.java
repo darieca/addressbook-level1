@@ -70,6 +70,9 @@ public class AddressBook {
     private static final String MESSAGE_COMMAND_HELP = "%1$s: %2$s";
     private static final String MESSAGE_COMMAND_HELP_PARAMETERS = "\tParameters: %1$s";
     private static final String MESSAGE_COMMAND_HELP_EXAMPLE = "\tExample: %1$s";
+    private static final String MESSAGE_COMMAND_HELPP = "%1$s: %2$s";
+    private static final String MESSAGE_COMMAND_HELPP_PARAMETERS = "\tParameters: %1$s";
+    private static final String MESSAGE_COMMAND_HELPP_EXAMPLE = "\tExample: %1$s";
     private static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted Person: %1$s";
     private static final String MESSAGE_DISPLAY_PERSON_DATA = "%1$s  Phone Number: %2$s  Email: %3$s";
     private static final String MESSAGE_DISPLAY_LIST_ELEMENT_INDEX = "%1$d. ";
@@ -110,6 +113,11 @@ public class AddressBook {
                                         + "keywords (case-sensitive) and displays them as a list with index numbers.";
     private static final String COMMAND_FIND_PARAMETERS = "KEYWORD [MORE_KEYWORDS]";
     private static final String COMMAND_FIND_EXAMPLE = COMMAND_FIND_WORD + " alice bob charlie";
+
+    private static final String COMMAND_FINDP_WORD = "findP";
+    private static final String COMMAND_FINDP_DESC = "Find person's particulars using phone number.";
+    private static final String COMMAND_FINDP_PARAMETERS = "PHONE NUMBER";
+    private static final String COMMAND_FINDP_EXAMPLE = COMMAND_FIND_WORD + " 91234567";
 
     private static final String COMMAND_LIST_WORD = "list";
     private static final String COMMAND_LIST_DESC = "Displays all persons as a list with index numbers.";
@@ -373,6 +381,8 @@ public class AddressBook {
             return executeAddPerson(commandArgs);
         case COMMAND_FIND_WORD:
             return executeFindPersons(commandArgs);
+        case COMMAND_FINDP_WORD:
+            return executeFindPersonPhoneNumber(commandArgs);
         case COMMAND_LIST_WORD:
             return executeListAllPersonsInAddressBook();
         case COMMAND_DELETE_WORD:
@@ -457,6 +467,19 @@ public class AddressBook {
     }
 
     /**
+     * Finds person's particular from phone number
+     *
+     * @param commandArgs phone number string from the user
+     * @return feedback display message for the operation result
+     */
+    private static String executeFindPersonPhoneNumber(String commandArgs) {
+        final Set<String> phonenumber = extractKeywordsFromFindPersonArgs(commandArgs);
+        final ArrayList<String[]> personsFound = getPersonsNameUsingPhoneNumber(phonenumber);
+        showToUser(personsFound);
+        return getMessageForPersonsDisplayedSummary(personsFound);
+    }
+
+    /**
      * Constructs a feedback message to summarise an operation that displayed a listing of persons.
      *
      * @param personsDisplayed used to generate summary
@@ -492,6 +515,24 @@ public class AddressBook {
         }
         return matchedPersons;
     }
+
+    /**
+     * Retrieves persons particulars with the phone number.
+     *
+     * @param phonenumber keyed in by user
+     * @return list of persons in full model with name containing some of the keywords
+     */
+    private static ArrayList<String[]> getPersonsNameUsingPhoneNumber(Collection<String> phonenumber) {
+        final ArrayList<String[]> matchedPersons = new ArrayList<>();
+        for (String[] person : getAllPersonsInAddressBook()) {
+            final Set<String> wordsInName = new HashSet<>(splitByWhitespace(getPhoneFromPerson(person)));
+            if (!Collections.disjoint(wordsInName, phonenumber)) {
+                matchedPersons.add(person);
+            }
+        }
+        return matchedPersons;
+    }
+
 
     /**
      * Deletes person identified using last displayed index.
@@ -599,7 +640,7 @@ public class AddressBook {
      * @return full line entered by the user
      */
     private static String getUserInput() {
-        System.out.print(LINE_PREFIX + "Enter command: ");
+        System.out.print(LINE_PREFIX + "Enter command:");
         String inputLine = SCANNER.nextLine();
         // silently consume all blank and comment lines
         while (inputLine.trim().isEmpty() || inputLine.trim().charAt(0) == INPUT_COMMENT_MARKER) {
@@ -1084,6 +1125,7 @@ public class AddressBook {
     private static String getUsageInfoForAllCommands() {
         return getUsageInfoForAddCommand() + LS
                 + getUsageInfoForFindCommand() + LS
+                + getUsageInfoForFindPCommand() + LS
                 + getUsageInfoForViewCommand() + LS
                 + getUsageInfoForDeleteCommand() + LS
                 + getUsageInfoForClearCommand() + LS
@@ -1098,11 +1140,19 @@ public class AddressBook {
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_ADD_EXAMPLE) + LS;
     }
 
+
     /** Returns the string for showing 'find' command usage instruction */
     private static String getUsageInfoForFindCommand() {
         return String.format(MESSAGE_COMMAND_HELP, COMMAND_FIND_WORD, COMMAND_FIND_DESC) + LS
                 + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_FIND_PARAMETERS) + LS
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_FIND_EXAMPLE) + LS;
+    }
+
+    /** Returns the string for showing 'findP' command usage instruction */
+    private static String getUsageInfoForFindPCommand() {
+        return String.format(MESSAGE_COMMAND_HELPP, COMMAND_FINDP_WORD, COMMAND_FINDP_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELPP_PARAMETERS, COMMAND_FINDP_PARAMETERS) + LS
+                + String.format(MESSAGE_COMMAND_HELPP_EXAMPLE, COMMAND_FINDP_EXAMPLE) + LS;
     }
 
     /** Returns the string for showing 'delete' command usage instruction */
